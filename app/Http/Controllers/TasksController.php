@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Task;
 
 class TasksController extends Controller
 {
+
     public function index()
     {
-        return view('tasks.index');
+        $tasks = Task::orderBy('completed_at')
+            ->orderBy('id', 'DESC')
+            ->get();
+
+        return view('tasks.index', ['tasks' => $tasks]);
     }
 
     public function create()
@@ -18,6 +23,31 @@ class TasksController extends Controller
 
     public function store()
     {
-        return request()->all();
+        request()->validate([
+            'description' => 'required|max:255'
+        ]);
+
+        Task::create(['description' => request('description')]);
+
+        return redirect("/");
+    }
+
+    public function update($id)
+    {
+        $task = Task::where('id', $id)->first();
+
+        $task->completed_at = now();
+        $task->save();
+
+        return redirect('/');
+    }
+
+    public function delete($id)
+    {
+        $task = Task::where('id', $id)->first();
+
+        $task->delete();
+
+        return redirect("/");
     }
 }
